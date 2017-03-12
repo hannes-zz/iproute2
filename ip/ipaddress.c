@@ -1693,7 +1693,7 @@ int print_addrinfo(const struct sockaddr_nl *who, struct nlmsghdr *n,
 		}
 	}
 
-	if (rta_tb[IFA_AFNETNS_INODE]) {
+	if (show_details && rta_tb[IFA_AFNETNS_INODE]) {
 		ino_t inode;
 		char *name;
 
