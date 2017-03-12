@@ -152,10 +152,17 @@ static inline __u32 rta_getattr_u32(const struct rtattr *rta)
 {
 	return *(__u32 *)RTA_DATA(rta);
 }
+
+static inline __s32 rta_getattr_s32(const struct rtattr *rta)
+{
+	return *(__s32 *)RTA_DATA(rta);
+}
+
 static inline __be32 rta_getattr_be32(const struct rtattr *rta)
 {
 	return ntohl(rta_getattr_u32(rta));
 }
+
 static inline __u64 rta_getattr_u64(const struct rtattr *rta)
 {
 	__u64 tmp;

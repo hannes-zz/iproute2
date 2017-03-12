@@ -148,37 +148,25 @@ out_delete:
 static int afnetns_switch(const char *name)
 {
 	int err, ns;
-	char *path;
 
-	err = asprintf(&path, "%s/%s", AFNETNS_RUN_DIR, name);
-	if (err < 0) {
-		perror("asprintf");
-		return err;
-	};
-
-	ns = open(path, O_RDONLY | O_CLOEXEC);
-	if (ns < 0) {
-		fprintf(stderr, "Cannot open afnet namespace \"%s\": %s\n",
-			name, strerror(errno));
-		err = ns;
-		goto out;
-	}
+	ns = afnetns_open(name);
+	if (ns < 0)
+		return ns;
 
 	err = setns(ns, CLONE_NEWAFNET);
 	if (err) {
 		fprintf(stderr, "setting the afnet namespace \"%s\" failed: %s\n",
 			name, strerror(errno));
-		goto out;
+		return err;
 	}
+
 	err = close(ns);
 	if (err) {
 		perror("close");
-		goto out;
+		return err;
 	}
 
-out:
-	free(path);
-	return err;
+	return 0;
 }
 
 static int afnetns_exec(int argc, char **argv)

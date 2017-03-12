@@ -124,3 +124,24 @@ int netns_foreach(int (*func)(char *nsname, void *arg), void *arg)
 	closedir(dir);
 	return 0;
 }
+
+int afnetns_open(const char *name)
+{
+	int ns;
+	char *path;
+
+	ns = asprintf(&path, "%s/%s", AFNETNS_RUN_DIR, name);
+	if (ns < 0) {
+		perror("asprintf");
+		return ns;
+	};
+
+	ns = open(path, O_RDONLY | O_CLOEXEC);
+	if (ns < 0) {
+		fprintf(stderr, "Cannot open afnet namespace \"%s\": %s\n",
+			name, strerror(errno));
+	}
+
+	free(path);
+	return ns;
+}
