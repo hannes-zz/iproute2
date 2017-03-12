@@ -17,7 +17,9 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <netdb.h>
@@ -1213,4 +1215,38 @@ int get_real_family(int rtm_type, int rtm_family)
 		return rtm_family;
 
 	return rtm_family == RTNL_FAMILY_IPMR ? AF_INET : AF_INET6;
+}
+
+int cmd_exec(const char *cmd, char **argv, bool do_fork)
+{
+	fflush(stdout);
+	if (do_fork) {
+		int status;
+		pid_t pid;
+
+		pid = fork();
+		if (pid < 0) {
+			perror("fork");
+			exit(1);
+		}
+
+		if (pid != 0) {
+			/* Parent  */
+			if (waitpid(pid, &status, 0) < 0) {
+				perror("waitpid");
+				exit(1);
+			}
+
+			if (WIFEXITED(status)) {
+				return WEXITSTATUS(status);
+			}
+
+			exit(1);
+		}
+	}
+
+	if (execvp(cmd, argv)  < 0)
+		fprintf(stderr, "exec of \"%s\" failed: %s\n",
+				cmd, strerror(errno));
+	_exit(1);
 }
