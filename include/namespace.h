@@ -7,7 +7,6 @@
 #include <sys/syscall.h>
 #include <errno.h>
 
-#define AFNETNS_RUN_DIR "/var/run/afnetns"
 #define NETNS_RUN_DIR "/var/run/netns"
 #define NETNS_ETC_DIR "/etc/netns"
 
@@ -51,8 +50,6 @@ static inline int setns(int fd, int nstype)
 int netns_switch(char *netns);
 int netns_get_fd(const char *netns);
 int netns_foreach(int (*func)(char *nsname, void *arg), void *arg);
-
-int afnetns_open(const char *name);
 
 struct netns_func {
 	int (*func)(char *nsname, void *arg);

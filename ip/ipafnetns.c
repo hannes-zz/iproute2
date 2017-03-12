@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "ip_common.h"
 #include "namespace.h"
+#include "afnetns.h"
 
 static void usage(void)
 {

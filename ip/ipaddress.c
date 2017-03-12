@@ -38,6 +38,7 @@
 #include "xdp.h"
 #include "color.h"
 #include "namespace.h"
+#include "afnetns.h"
 
 enum {
 	IPADD_LIST,
@@ -1004,7 +1005,7 @@ static int afnetns_get_fd(const char *name)
 {
 	int ns = -1;
 
-	if (name[0] == '/')
+	if (strnlen(name, 1) && name[0] == '/')
 		ns = open(name, O_RDONLY | O_CLOEXEC);
 	else
 		ns = afnetns_open(name);
@@ -1219,8 +1220,13 @@ int print_addrinfo(const struct sockaddr_nl *who, struct nlmsghdr *n,
 		}
 	}
 	if (rta_tb[IFA_AFNETNS_INODE]) {
-		fprintf(fp, " afnet:[%u]",
-			rta_getattr_u32(rta_tb[IFA_AFNETNS_INODE]));
+		ino_t inode;
+		char *name;
+
+		inode = rta_getattr_u32(rta_tb[IFA_AFNETNS_INODE]);
+		name = afnetns_lookup_name(inode);
+		if (name)
+			fprintf(fp, " afnet %s", name);
 	}
 	fprintf(fp, "\n");
 brief_exit:
