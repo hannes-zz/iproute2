@@ -8,11 +8,16 @@
 #include <sys/syscall.h>
 #include <errno.h>
 
+#define AFNETNS_RUN_DIR "/var/run/afnetns"
 #define NETNS_RUN_DIR "/var/run/netns"
 #define NETNS_ETC_DIR "/etc/netns"
 
 #ifndef CLONE_NEWNET
 #define CLONE_NEWNET 0x40000000	/* New network namespace (lo, device, names sockets, etc) */
+#endif
+
+#ifndef CLONE_NEWAFNET
+#define CLONE_NEWAFNET	0x00001000	/* Clone new afnet context */
 #endif
 
 #ifndef MNT_DETACH

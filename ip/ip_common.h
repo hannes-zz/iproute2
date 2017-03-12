@@ -79,6 +79,7 @@ int do_multiaddr(int argc, char **argv);
 int do_multiroute(int argc, char **argv);
 int do_multirule(int argc, char **argv);
 int do_netns(int argc, char **argv);
+int do_afnetns(int argc, char **argv);
 int do_xfrm(int argc, char **argv);
 int do_ipl2tp(int argc, char **argv);
 int do_ipfou(int argc, char **argv);
