@@ -36,6 +36,7 @@
 #include "ip_common.h"
 #include "xdp.h"
 #include "color.h"
+#include "namespace.h"
 
 enum {
 	IPADD_LIST,
@@ -1370,6 +1371,18 @@ static int set_lifetime(unsigned int *lifetime, char *argv)
 	return 0;
 }
 
+static int afnetns_get_fd(const char *name)
+{
+	int ns = -1;
+
+	if (name[0] == '/')
+		ns = open(name, O_RDONLY | O_CLOEXEC);
+	else
+		ns = afnetns_open(name);
+
+	return ns;
+}
+
 static unsigned int get_ifa_flags(struct ifaddrmsg *ifa,
 				  struct rtattr *ifa_flags_attr)
 {
@@ -1678,6 +1691,13 @@ int print_addrinfo(const struct sockaddr_nl *who, struct nlmsghdr *n,
 					   ci->ifa_prefered);
 		}
 	}
+
+	if (rta_tb[IFA_AFNETNS_INODE]) {
+		ino_t afino = rta_getattr_u32(rta_tb[IFA_AFNETNS_INODE]);
+		print_uint(PRINT_FP, NULL, " afnet:[%u]", afino);
+		print_uint(PRINT_JSON, "afnetns", "%u", afino);
+	}
+
 	print_string(PRINT_FP, NULL, "%s", "\n");
 brief_exit:
 	fflush(fp);
@@ -2353,6 +2373,7 @@ static int ipaddr_modify(int cmd, int flags, int argc, char **argv)
 	int brd_len = 0;
 	int any_len = 0;
 	int scoped = 0;
+	int afnetns_fd = -1;
 	__u32 preferred_lft = INFINITY_LIFE_TIME;
 	__u32 valid_lft = INFINITY_LIFE_TIME;
 	unsigned int ifa_flags = 0;
@@ -2428,6 +2449,14 @@ static int ipaddr_modify(int cmd, int flags, int argc, char **argv)
 			preferred_lftp = *argv;
 			if (set_lifetime(&preferred_lft, *argv))
 				invarg("preferred_lft value", *argv);
+		} else if (strcmp(*argv, "afnetns") == 0) {
+			if (afnetns_fd != -1)
+				duparg("afnetns", *argv);
+
+			NEXT_ARG();
+			afnetns_fd = afnetns_get_fd(*argv);
+			if (afnetns_fd < 0)
+				invarg("afnetns", *argv);
 		} else if (strcmp(*argv, "home") == 0) {
 			ifa_flags |= IFA_F_HOMEADDRESS;
 		} else if (strcmp(*argv, "nodad") == 0) {
@@ -2534,8 +2563,14 @@ static int ipaddr_modify(int cmd, int flags, int argc, char **argv)
 		return -1;
 	}
 
+	if (afnetns_fd != -1)
+		addattr32(&req.n, sizeof(req), IFA_AFNETNS_FD, afnetns_fd);
+
 	if (rtnl_talk(&rth, &req.n, NULL) < 0)
 		return -2;
+
+	if (afnetns_fd > 0)
+		close(afnetns_fd);
 
 	return 0;
 }

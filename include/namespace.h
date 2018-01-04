@@ -53,6 +53,8 @@ int netns_switch(char *netns);
 int netns_get_fd(const char *netns);
 int netns_foreach(int (*func)(char *nsname, void *arg), void *arg);
 
+int afnetns_open(const char *name);
+
 struct netns_func {
 	int (*func)(char *nsname, void *arg);
 	void *arg;
